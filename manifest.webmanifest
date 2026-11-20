@@ -1,0 +1,14 @@
+{
+  "name": "StitchRow — knitting pattern tracker",
+  "short_name": "StitchRow",
+  "description": "Track rows, stitch counts and progress in PDF knitting patterns.",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#f4f2ed",
+  "theme_color": "#f4f2ed",
+  "icons": [
+    { "src": "icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }
+  ]
+}

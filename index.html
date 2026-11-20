@@ -1,0 +1,278 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#f4f2ed">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="StitchRow">
+<title>StitchRow — knitting pattern tracker</title>
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="icon.svg">
+<style>
+  :root{
+    --paper:#f4f2ed;--surface:#fffdf9;--ink:#16191c;--muted:#66706b;--line:#d9d6cd;
+    --accent:#0f6b5c;--accent-dark:#0b5146;--accent-soft:#dcece7;--warn:#b4462e;--radius:16px;
+  }
+  *{box-sizing:border-box} html,body{margin:0;min-height:100%}
+  body{background:var(--paper);color:var(--ink);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;-webkit-tap-highlight-color:transparent}
+  .app{max-width:560px;margin:0 auto;padding:max(env(safe-area-inset-top),18px) 18px max(env(safe-area-inset-bottom),28px);display:grid;gap:18px}
+  header{display:flex;align-items:center;gap:12px}
+  h1{font-size:20px;margin:0;font-weight:700;letter-spacing:-.02em}
+  .sub{font-size:12px;color:var(--muted);margin:2px 0 0}
+  .pill{margin-left:auto;font-size:12px;color:var(--accent);background:var(--accent-soft);border-radius:999px;padding:7px 12px;font-weight:650;white-space:nowrap}
+  .current{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:20px}
+  .eyebrow{font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--muted);font-weight:700;margin:0 0 6px}
+  .rowline{display:flex;align-items:baseline;gap:10px}
+  .num{font-size:58px;font-weight:720;letter-spacing:-.05em;line-height:1;font-variant-numeric:tabular-nums}
+  .unit{font-size:15px;color:var(--muted)}
+  .tags{display:flex;flex-wrap:wrap;gap:6px;margin:14px 0 10px}
+  .tag{font-size:12px;font-weight:650;padding:5px 10px;border-radius:999px;background:var(--accent-soft);color:var(--accent-dark);text-transform:capitalize}
+  .tag.special{background:#f4e6df;color:var(--warn)}
+  .instruction{font-size:17px;line-height:1.45;margin:0 0 16px}
+  .stitches{font-size:14px;color:var(--muted);margin:0 0 16px}
+  .stitches b{color:var(--ink);font-size:16px}
+  #chartWrap{position:relative;display:none;margin:0 0 16px;border:1px solid var(--line);border-radius:10px;overflow:hidden;background:#fff}
+  #chartImg{display:block;width:100%;height:auto}
+  #chartBand{position:absolute;left:0;right:0;height:0;background:rgba(15,107,92,.22);border-top:2px solid var(--accent);border-bottom:2px solid var(--accent);pointer-events:none;display:none}
+  .chart-note{font-size:12px;color:var(--muted);margin:0 0 8px}
+  .nav{display:flex;gap:8px;margin-bottom:10px}
+  .nav button{flex:1;min-height:40px;font-size:14px}
+  button{font:inherit;cursor:pointer;border-radius:12px;border:1px solid var(--line);background:var(--surface);color:var(--ink);min-height:46px;padding:0 16px;transition:transform .12s,background .12s}
+  button:active{transform:scale(.985)} button:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+  button:disabled{opacity:.45;cursor:default}
+  .done-btn{width:100%;min-height:54px;background:var(--accent);color:#fff;border-color:transparent;font-weight:700;font-size:16px}
+  .done-btn:active{background:var(--accent-dark)}
+  .stats{display:grid;grid-template-columns:1fr 1fr;gap:1px;background:var(--line);border:1px solid var(--line);border-radius:var(--radius);overflow:hidden}
+  .stat{background:var(--surface);padding:14px 16px}
+  .stat span{display:block;font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
+  .stat b{font-size:22px;font-variant-numeric:tabular-nums}
+  .section-title{font-size:13px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin:6px 0 0}
+  .group{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:14px 16px 16px}
+  .group-head{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:12px}
+  .group-head b{font-size:15px}
+  .group-head span{font-size:13px;color:var(--muted);font-variant-numeric:tabular-nums}
+  .tiles{display:grid;grid-template-columns:repeat(8,minmax(40px,1fr));gap:5px;overflow-x:auto;padding-bottom:4px}
+  .tile{min-height:58px;padding:6px 2px;display:flex;flex-direction:column;align-items:center;justify-content:space-between;border:1px solid var(--line);border-radius:10px;background:var(--paper);font-size:12px;color:var(--muted)}
+  .tile .box{width:20px;height:20px;border:2px solid var(--line);border-radius:6px;display:grid;place-items:center;font-size:13px;line-height:1}
+  .tile.checked{background:var(--accent-soft);border-color:var(--accent);color:var(--accent-dark)}
+  .tile.checked .box{background:var(--accent);border-color:var(--accent);color:#fff}
+  .tile.current{border-color:var(--accent);box-shadow:0 0 0 2px var(--accent-soft) inset}
+  .more{width:100%}
+  details{border-top:1px solid var(--line);padding-top:12px}
+  summary{cursor:pointer;font-size:13px;color:var(--muted);font-weight:650}
+  .import-block{padding-top:12px;display:grid;gap:10px}
+  .import-block label{font-size:12px;color:var(--muted);display:block;margin-bottom:4px}
+  input[type=file],select{width:100%;font:inherit;font-size:14px;padding:10px;border:1px solid var(--line);border-radius:10px;background:var(--surface);color:var(--ink)}
+  textarea{width:100%;min-height:110px;font:13px/1.45 ui-monospace,Menlo,monospace;border:1px solid var(--line);border-radius:10px;padding:10px;background:var(--surface);color:var(--ink)}
+  .import-row{display:flex;gap:10px;flex-wrap:wrap}
+  .import-row button{flex:1;min-width:120px}
+  .msg{font-size:12px;margin:4px 0 0;min-height:16px;color:var(--muted)}
+  .msg.err{color:var(--warn)}
+  .toolbar{display:flex;justify-content:space-between;align-items:center}
+  .link-btn{border:none;background:none;color:var(--muted);font-size:12px;text-decoration:underline;padding:0;min-height:0}
+  @media(prefers-reduced-motion:reduce){button{transition:none}button:active{transform:none}}
+</style>
+</head>
+<body>
+<main class="app">
+  <header>
+    <div><h1 id="title">Import a pattern</h1><p class="sub" id="note">Upload a PDF knitting pattern to start tracking rows.</p></div>
+    <span class="pill" id="pill">No pattern</span>
+  </header>
+
+  <section class="current" aria-label="Current row">
+    <p class="eyebrow">Current row</p>
+    <div class="rowline"><span class="num" id="curNum">—</span><span class="unit" id="curMeta">Load a pattern to begin</span></div>
+    <div class="tags" id="tags"></div>
+    <p class="instruction" id="instruction">Upload a PDF pattern below, or import JSON.</p>
+    <p class="chart-note" id="chartNote" style="display:none"></p>
+    <div id="chartWrap"><img id="chartImg" alt="Chart from the pattern"><div id="chartBand"></div></div>
+    <p class="stitches">You should have <b id="stitches">0 stitches</b> after this row.</p>
+    <div class="nav">
+      <button id="prev" type="button">← Undo last</button>
+      <button id="jump" type="button">Jump to row</button>
+    </div>
+    <button class="done-btn" id="markDone" type="button" disabled>Row complete →</button>
+  </section>
+
+  <section class="stats" aria-label="Progress">
+    <div class="stat"><span>Rows done</span><b id="doneCount">0 / 0</b></div>
+    <div class="stat"><span>Stitches at current row</span><b id="curStitches">—</b></div>
+  </section>
+
+  <div class="toolbar"><p class="section-title">Rows in this pattern</p><button class="link-btn" id="clear" type="button">Clear pattern</button></div>
+  <div id="groups" style="display:grid;gap:12px"></div>
+  <button class="more" id="more" type="button" style="display:none">Show more rows</button>
+
+  <details id="importPanel">
+    <summary>Import pattern</summary>
+    <div class="import-block">
+      <div>
+        <label for="pdfFile">PDF pattern</label>
+        <input id="pdfFile" type="file" accept="application/pdf,.pdf">
+      </div>
+      <div>
+        <label for="size">Pattern size (change if the pattern has several)</label>
+        <select id="size"><option value="0">Size 1</option></select>
+      </div>
+      <div class="import-row">
+        <button id="importPdf" type="button">Import PDF</button>
+        <button id="resetProgress" type="button">Reset progress</button>
+      </div>
+      <div>
+        <label for="importText">Or paste pattern JSON (works offline)</label>
+        <textarea id="importText" spellcheck="false" placeholder='{"title":"Scarf","groups":[{"name":"Rows 1-8","steps":[{"label":"1","instruction":"Knit all stitches","tags":["knit"],"stitches":20}]}]}'></textarea>
+      </div>
+      <div class="import-row">
+        <button id="importJson" type="button">Import JSON</button>
+        <button id="exportJson" type="button">Export JSON</button>
+      </div>
+      <p class="msg" id="msg"></p>
+    </div>
+  </details>
+</main>
+<script>
+(function(){
+  var KEY='stitchrow.v1';
+  var EMPTY={title:'',note:'',groups:[],done:{},visible:5};
+  var state;
+  try{state=JSON.parse(localStorage.getItem(KEY))||null;}catch(e){state=null;}
+  if(!state||!state.groups||!state.groups.length)state=JSON.parse(JSON.stringify(EMPTY));
+  state.done=state.done||{}; if(!state.visible)state.visible=5;
+  function save(){try{localStorage.setItem(KEY,JSON.stringify(state));}catch(e){}}
+  function msg(t,err){var m=document.getElementById('msg');m.textContent=t;m.className='msg'+(err?' err':'');}
+  var flatCache=null;
+  function rows(){if(!flatCache){flatCache=[];state.groups.forEach(function(g,gi){g.steps.forEach(function(s,si){flatCache.push({g:gi,s:si,row:s});});});}return flatCache;}
+  function total(){return rows().length;}
+  function doneCount(){var n=0;rows().forEach(function(x){if(state.done[x.g+'-'+x.s])n++;});return n;}
+  function firstUndone(){var f=rows();for(var i=0;i<f.length;i++){if(!state.done[f[i].g+'-'+f[i].s])return f[i];}return f[f.length-1]||null;}
+  function invalidate(){flatCache=null;}
+
+  function render(){
+    var f=rows(), cur=firstUndone(), idx=cur?(f.indexOf(cur)+1):f.length;
+    document.getElementById('title').textContent=state.title||'Import a pattern';
+    document.getElementById('note').textContent=state.note||(f.length?'':'Upload a PDF knitting pattern to start tracking rows.');
+    document.getElementById('pill').textContent=f.length?('Row '+idx+' / '+f.length):'No pattern';
+    var done=doneCount();
+    if(cur){
+      document.getElementById('curNum').textContent=idx;
+      document.getElementById('curMeta').textContent=state.groups[cur.g].name+' · row '+cur.row.label;
+      document.getElementById('tags').innerHTML=(cur.row.tags||[]).map(function(t){
+        return '<span class="tag'+((t==='decrease'||t==='special')?' special':'')+'">'+t+'</span>';}).join('');
+      document.getElementById('instruction').textContent=cur.row.instruction||'';
+      document.getElementById('stitches').textContent=cur.row.stitches+' stitches';
+      document.getElementById('curStitches').textContent=cur.row.stitches;
+    }else{
+      document.getElementById('curNum').textContent='✓';
+      document.getElementById('curMeta').textContent=f.length?'Pattern complete':'No rows yet';
+      document.getElementById('tags').innerHTML='';
+      document.getElementById('instruction').textContent=f.length?'You finished this pattern!':'Upload a PDF pattern below, or import JSON.';
+      document.getElementById('stitches').textContent='—';
+      document.getElementById('curStitches').textContent=f.length?f[f.length-1].row.stitches:'—';
+    }
+    document.getElementById('doneCount').textContent=done+' / '+f.length;
+    var cw=document.getElementById('chartWrap'),cn=document.getElementById('chartNote'),cb=document.getElementById('chartBand');
+    if(state.chart&&state.chart.img){
+      cw.style.display='block';cn.style.display='block';cb.style.display='block';
+      document.getElementById('chartImg').src=state.chart.img;
+      var rpr=state.chart.rowsPerRepeat||1, inRep=((idx-1)%rpr)+1;
+      cn.textContent='Chart row '+inRep+' of '+rpr+' · repeat '+Math.floor((idx-1)/rpr)+1+' · follow the highlighted row';
+      cb.style.top=((inRep-1)/rpr*100)+'%';cb.style.height=(100/rpr)+'%';
+    }else{cw.style.display='none';cn.style.display='none';cb.style.display='none';}
+    var btn=document.getElementById('markDone');btn.disabled=!cur;btn.textContent=cur?'Row complete →':'All rows done';
+    document.getElementById('prev').disabled=done===0;
+    document.getElementById('jump').disabled=!f.length;
+    var box=document.getElementById('groups');box.innerHTML='';
+    state.groups.slice(0,state.visible).forEach(function(g,gi){
+      var n=0;
+      g.steps.forEach(function(s,si){if(state.done[gi+'-'+si])n++;});
+      var el=document.createElement('section');el.className='group';
+      el.innerHTML='<div class="group-head"><b>'+g.name+'</b><span>'+n+'/'+g.steps.length+'</span></div>';
+      var tiles=document.createElement('div');tiles.className='tiles';
+      g.steps.forEach(function(s,si){
+        var k=gi+'-'+si, checked=!!state.done[k], isCur=cur&&cur.g===gi&&cur.s===si;
+        var b=document.createElement('button');b.type='button';
+        b.className='tile'+(checked?' checked':'')+(isCur?' current':'');
+        b.setAttribute('aria-label','Row '+s.label+(checked?', done':''));
+        b.innerHTML='<span class="box">'+(checked?'✓':'')+'</span><span>'+s.label+'</span>';
+        b.addEventListener('click',function(){state.done[k]=!state.done[k];save();render();});
+        tiles.appendChild(b);
+      });
+      el.appendChild(tiles);box.appendChild(el);
+    });
+    var more=document.getElementById('more');
+    more.style.display=state.visible<state.groups.length?'block':'none';
+    more.textContent='Show '+(state.groups.length-state.visible)+' more rows';
+  }
+
+  function loadPattern(data){
+    state={title:data.title||'Pattern',note:data.note||'',groups:data.groups||[],done:{},
+           chart:data.chart||null,visible:Math.min(5,(data.groups||[]).length)};
+    invalidate();save();render();
+  }
+
+  document.getElementById('markDone').addEventListener('click',function(){var c=firstUndone();if(c){state.done[c.g+'-'+c.s]=true;save();render();}});
+  document.getElementById('prev').addEventListener('click',function(){
+    var f=rows(),lastDone=-1;for(var i=0;i<f.length;i++){if(state.done[f[i].g+'-'+f[i].s])lastDone=i;}
+    if(lastDone>=0){delete state.done[f[lastDone].g+'-'+f[lastDone].s];save();render();}});
+  document.getElementById('jump').addEventListener('click',function(){
+    var f=rows();if(!f.length)return;
+    var c=firstUndone();var n=parseInt(prompt('Jump to row (1–'+f.length+'):',c?(f.indexOf(c)+1):1),10);
+    if(!isNaN(n)&&n>=1&&n<=f.length){for(var i=0;i<f.length;i++)state.done[f[i].g+'-'+f[i].s]=(i<n-1);save();render();}
+  });
+  document.getElementById('more').addEventListener('click',function(){state.visible=Math.min(state.groups.length,state.visible+8);save();render();});
+  document.getElementById('resetProgress').addEventListener('click',function(){state.done={};save();render();msg('Progress reset.');});
+  document.getElementById('clear').addEventListener('click',function(){
+    if(confirm('Remove this pattern and its progress?')){state=JSON.parse(JSON.stringify(EMPTY));invalidate();save();render();msg('Pattern cleared.');}
+  });
+  document.getElementById('importJson').addEventListener('click',function(){
+    try{var d=JSON.parse(document.getElementById('importText').value);
+      if(!d.groups||!d.groups.length)throw new Error('No rows found');
+      loadPattern(d);msg('Imported '+total()+' rows.');
+    }catch(e){msg('Could not read JSON: '+e.message,true);}
+  });
+  document.getElementById('exportJson').addEventListener('click',function(){
+    document.getElementById('importText').value=JSON.stringify({title:state.title,note:state.note,groups:state.groups},null,1);
+    msg('Pattern JSON is in the box — copy it from here.');
+  });
+
+  function readFileB64(file,cb){var r=new FileReader();r.onload=function(){cb(r.result.split(',')[1]);};r.readAsDataURL(file);}
+
+  document.getElementById('pdfFile').addEventListener('change',function(){
+    var file=this.files[0];if(!file)return;
+    var sel=document.getElementById('size');sel.innerHTML='<option value="0">Size 1</option>';
+    msg('Detecting sizes…');
+    readFileB64(file,function(b64){
+      fetch('/api/sizes',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({pdf:b64})})
+      .then(function(r){return r.json();})
+      .then(function(d){
+        if(d.count&&d.count>1){var h='';for(var i=0;i<d.count;i++)h+='<option value="'+i+'">Size '+(i+1)+'</option>';sel.innerHTML=h;}
+        msg('Ready — choose a size, then click Import PDF.');
+      }).catch(function(){msg('File selected. The local server is needed for size detection.',true);});
+    });
+  });
+
+  document.getElementById('importPdf').addEventListener('click',function(){
+    var file=document.getElementById('pdfFile').files[0];
+    if(!file){msg('Choose a PDF file first.',true);return;}
+    msg('Reading PDF…');
+    readFileB64(file,function(b64){
+      var size=parseInt(document.getElementById('size').value||'0',10);
+      fetch('/api/parse',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({pdf:b64,size:size})})
+      .then(function(r){return r.json().then(function(d){if(!r.ok)throw new Error(d.error||'Server error');return d;});})
+      .then(function(d){
+        if(d.error){msg(d.error,true);return;}
+        loadPattern(d);msg('Imported '+d.row_count+' rows from '+d.title+'.');
+      })
+      .catch(function(e){msg('PDF import needs the local server: python3 app.py  ('+e.message+')',true);});
+    });
+  });
+
+  render();
+  if('serviceWorker' in navigator&&location.protocol!=='file:')navigator.serviceWorker.register('sw.js').catch(function(){});
+})();
+</script>
+</body>
+</html>
