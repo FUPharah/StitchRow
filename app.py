@@ -46,7 +46,7 @@ class Handler(BaseHTTPRequestHandler):
     def do_GET(self):
         path = self.path.split('?')[0]
         if path in ('/', '/index.html'):
-            path = '/index.html'
+            path = '/server.html'
         fp = os.path.join(HERE, path.lstrip('/'))
         if not os.path.isfile(fp) or not os.path.abspath(fp).startswith(HERE):
             return self._send(404, {'error': 'not found'})

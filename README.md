@@ -18,7 +18,8 @@ An offline-first knitting row tracker for PDF patterns. Import a pattern PDF, ch
 
 ## Files
 
-- `index.html` — server-based UI.
+- `index.html` — self-contained offline app and GitHub Pages site root.
+- `server.html` — server-based UI used by `app.py`.
 - `StitchRow-offline.html` — single-file offline app.
 - `app.py` — local server with `/api/parse` and `/api/sizes`.
 - `pattern-extract/parse_pattern.py` — PDF-to-rows parser used by the server.
