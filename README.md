@@ -4,6 +4,8 @@ An offline-first knitting row tracker for PDF patterns. Import a pattern PDF, ch
 
 ## Use it
 
+- Live site: https://fupharah.github.io/StitchRow/ (GitHub Pages, HTTPS, permanent link).
+
 - Open `StitchRow-offline.html` in a browser — everything is in that one file and no server is needed.
 - For installation as a web app, deploy the four-file site in `StitchRow-pwa.zip` (or this repo with `index.html` at the root) to any static HTTPS host.
 - The optional local server version: `python3 app.py`, then open `http://127.0.0.1:8124`.
